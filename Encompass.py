@@ -21,7 +21,10 @@ import pygame.locals
 pygame.init()
 pygame.font.init()
 
-fontComicSans = pygame.font.SysFont('Comic Sans MS', 30)
+
+# Local Imports
+from Actions import *
+
 
 # Define colors
 WHITE = (255,255,255)
@@ -107,6 +110,10 @@ class Board:
         return int(getAlongAxis(x, xMax)), int(getAlongAxis(y, yMax))
 
 
+    def processClick(self, pos):
+        logging.info("Click signal received: position {} {}".format(*pos))
+
+
     def draw(self, surface):
         xMax, yMax = surface.get_size()
 
@@ -128,12 +135,17 @@ class Input:
     def __init__(self):
         pass
 
-    def parseInputs(self):
+    def parseInputs(self, actionQueue):
         for event in pygame.event.get():
             # Detect Quit Action
             if event.type == pygame.locals.QUIT:
                 pygame.quit()
                 sys.exit()
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                pos = pygame.mouse.get_pos()
+                actionQueue.append(ActionMouseClick(pos))
+
 
 
 class World:
@@ -148,7 +160,12 @@ class World:
 
         self.input = Input()
 
-        self.entities = [Board()]
+        self.board = Board()
+
+
+    def _processAction(self, action):
+        if action.getActionType() == "MOUSEBUTTONUP":
+            self.board.processClick(action.getPos())
 
 
     def run(self):
@@ -156,13 +173,17 @@ class World:
         Runs the game
         '''
         while True:
-            self.input.parseInputs()
+            # Process user inputs
+            actionQueue = []
+            assert(len(actionQueue) == 0)
+            self.input.parseInputs(actionQueue)
 
-            # Update objects
+            for action in actionQueue:
+                self._processAction(action)
+
+            # Draw objects
             self.surface.fill(WHITE)
-
-            for entity in self.entities:
-                entity.draw(self.surface)
+            self.board.draw(self.surface)
 
             # Update display
             pygame.display.flip()
