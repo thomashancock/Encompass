@@ -72,8 +72,8 @@ class Grid:
         '''
         Draw the game grid without side edges
         '''
-        xOrig, yOrig = self.origin
-        xDim, yDim = self.dimensions
+        xOrig, yOrig = self.origin # Coordinate of upper left corner of grid
+        xDim, yDim = self.dimensions # Dimensions of grid
 
         for i in range(1, self.nSpaces):
             # Horizontal lines
@@ -105,8 +105,17 @@ class Grid:
         return int(xOrig + getAlongAxis(x, xDim)), int(yOrig + getAlongAxis(y, yDim))
 
 
-    def isInBox(self, pos):
-        pass
+    def getGridCoor(self, pos):
+        xPosRel, yPosRel = pos[0] - self.origin[0], pos[1] - self.origin[1]
+
+        if (xPosRel < 0 or yPosRel < 0):
+            return (-1, -1)
+        else:
+            xCoor = int(self.nSpaces * (xPosRel/float(self.dimensions[0])))
+            yCoor = int(self.nSpaces * (yPosRel/float(self.dimensions[1])))
+            if (xCoor > self.nSpaces - 1 or yCoor > self.nSpaces - 1):
+                return (-1, -1)
+            return xCoor, yCoor
 
 
 class Board:
@@ -128,7 +137,7 @@ class Board:
 
 
     def processClick(self, pos):
-        logging.info("Click signal received: position {} {}".format(*pos))
+        logging.info("Click signal received: coordinate {} {}".format(*self.grid.getGridCoor(pos)))
 
 
     def draw(self, surface):
