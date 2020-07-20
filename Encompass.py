@@ -92,7 +92,16 @@ class Board:
 
 
     def draw(self, surface):
-        pass
+        xMax, yMax = surface.get_size()
+
+        # Draw 5x5 grid
+        for i in range(2,6):
+            # Horizontal lines
+            pygame.draw.line(surface, GREY, (i*xMax/float(7), 1*yMax/float(7)), (i*xMax/float(7), 6*yMax/float(7)))
+
+            # Vertical lines
+            pygame.draw.line(surface, GREY, (1*xMax/float(7), i*yMax/float(7)), (6*xMax/float(7), i*yMax/float(7)))
+
 
 
 
