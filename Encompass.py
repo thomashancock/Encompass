@@ -60,12 +60,17 @@ class Game:
 
 
     def updateState(self):
-        if (self.board.isFull()):
+        logging.info("Updating game state")
+        if (self.board.isVictory()):
+            logging.info("Player {} wins!".format("1" if self.isP1Turn() else "2"))
+        elif (self.board.isFull()):
             logging.info("Board full. Entering clearance mode")
             self.clearance = 6
             self.inClearance = True
         elif (self.inClearance and self.clearance == 0):
             logging.info("End of clearance mode")
+
+        self.updateTurn()
 
 
     def processClick(self, pos):
@@ -74,22 +79,21 @@ class Game:
             logging.info("Click signal received on grid: coordinate ({} {})".format(*coor))
 
             if (self.clearance == 0):
-                if (self.board.spaceIsEmpty(coor)):
+                if (self.board.isSpaceEmpty(coor)):
                     if (self.isP1Turn()):
                         self.board.setP1(coor)
-                        self.updateTurn()
+                        self.updateState()
                     else:
                         self.board.setP2(coor)
-                        self.updateTurn()
+                        self.updateState()
             else:
                 # Process clearance. Can only remove own beads
                 if ((self.isP1Turn() and self.board.isP1(coor)) or (self.isP2Turn() and self.board.isP2(coor))):
                     self.board.setEmpty(coor)
                     self.clearance -= 1
-                    self.updateTurn()
                     assert(self.clearance > -1)
+                    self.updateState()
 
-            self.updateState()
 
         else:
             logging.info("Click signal received: position ({} {})".format(*pos))

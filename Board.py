@@ -116,7 +116,7 @@ class Board:
         self.array[xCoor][yCoor] = val
 
 
-    def spaceIsEmpty(self, coor):
+    def isSpaceEmpty(self, coor):
         return (self._getSpace(coor) == 0)
 
 
@@ -149,10 +149,47 @@ class Board:
 
 
     def isFull(self):
+        '''
+        Returns whether the board has no empty spaces
+        '''
         if sum([i.count(0) for i in self.array]) == 0:
             return True
         else:
             return False
+
+
+    def _isOnBorder(self, coor):
+        return ((0 in coor) or (self.size -1 in coor))
+
+
+    def isSpaceSurrounded(self, coor):
+        if (self._isOnBorder(coor)):
+            # Border squares cannot be surrounded
+            return false
+        else:
+            up = (coor[0], coor[1]+1)
+            down = (coor[0], coor[1]-1)
+            left = (coor[0]+1, coor[1])
+            right = (coor[0]-1, coor[1])
+            permuts = [up, down, left, right]
+            count = sum(self._getSpace(perm) for perm in permuts)
+            logging.info("{} {}: {}".format(*coor, count))
+            if abs(count) == 4:
+                logging.info("Returning true!")
+                return True
+            else:
+                return False
+
+
+    def isVictory(self):
+        logging.info("Checking for victory")
+        for x, y in itertools.product(range(1, self.size-1), range(1, self.size-1)):
+            coor = (x,y)
+            if self.isSpaceSurrounded(coor):
+                # Check if centre and outside have different coloured beads
+                if self._getSpace(coor) * self._getSpace((x, y+1)) < 0:
+                    return True
+        return False
 
 
     def draw(self, surface):
