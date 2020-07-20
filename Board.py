@@ -73,6 +73,15 @@ class Space:
             self.sprite = None
 
 
+    def isOnBead(self, pos):
+        if self.sprite == None:
+            return False
+        elif self.sprite.collidepoint(pos):
+            return True
+        else:
+            return False
+
+
 class Grid:
     def __init__(self, nSpaces, origin, dimensions):
         self.nSpaces = nSpaces
@@ -167,10 +176,10 @@ class Board:
             if (space.isEmpty()):
                 logging.info("Set ({} {}) to P1".format(*clickCoor))
                 space.setP1()
-            elif (space.isP1()):
+            elif (space.isP1() and space.isOnBead(pos)):
                 space.setP2()
                 logging.info("Set ({} {}) to P2".format(*clickCoor))
-            else:
+            elif (space.isP2() and space.isOnBead(pos)):
                 space.setEmpty()
                 logging.info("Set ({} {}) to empty".format(*clickCoor))
 
