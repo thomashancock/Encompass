@@ -13,8 +13,10 @@ class Space:
     '''
     Records the status of a single space. Can be empty, P1 or P2
     '''
-    def __init__(self):
-        self.state="empty"
+    def __init__(self, radius):
+        self.state = "empty"
+        self.sprite = None
+        self.radius = radius
 
 
     def __repr__(self):
@@ -32,8 +34,8 @@ class Space:
             return 2
 
 
-    def _validateState():
-        return (self.state in ["empty", "p1", "p2"])
+    def _validateState(self):
+        return (self.state in ["empty", "P1", "P2"])
 
 
     def setEmpty(self):
@@ -58,6 +60,17 @@ class Space:
 
     def isP2(self):
         return self.state == "P2"
+
+
+    def draw(self, surface, pos):
+        if not self._validateState():
+            return f"Error.Invalid state: {self.state}"
+        elif self.state == "P1":
+            self.sprite = pygame.draw.circle(surface, colour.RED, pos, self.radius)
+        elif self.state == "P2":
+            self.sprite = pygame.draw.circle(surface, colour.BLUE, pos, self.radius)
+        else:
+            self.sprite = None
 
 
 class Grid:
@@ -127,10 +140,12 @@ class Grid:
 class Board:
     def __init__(self, surface):
         self.size = 5
-        self.array = [[Space() for _ in range(self.size)] for _ in range(self.size)]
+
+        xMax, yMax = surface.get_size()
+        beadRadius = int(xMax/float(20))
+        self.array = [[Space(beadRadius) for _ in range(self.size)] for _ in range(self.size)]
 
         # Define grid size to be 5/7ths of the width of the window
-        xMax, yMax = surface.get_size()
         self.grid = Grid(
             self.size,
             (1*xMax/float(7), 1*yMax/float(7)),
@@ -146,33 +161,32 @@ class Board:
     def processClick(self, pos):
         if (self.grid.isOnGrid(pos)):
             clickCoor = self.grid.getGridCoor(pos)
-            logging.info("Click signal received: coordinate {} {}".format(*clickCoor))
+            logging.info("Click signal received: coordinate ({} {})".format(*clickCoor))
 
             space = self.getSpace(clickCoor)
             if (space.isEmpty()):
+                logging.info("Set ({} {}) to P1".format(*clickCoor))
                 space.setP1()
             elif (space.isP1()):
                 space.setP2()
+                logging.info("Set ({} {}) to P2".format(*clickCoor))
             else:
                 space.setEmpty()
+                logging.info("Set ({} {}) to empty".format(*clickCoor))
 
         else:
-            logging.info("Click signal received: position {} {}".format(*pos))
+            logging.info("Click signal received: position ({} {})".format(*pos))
 
 
     def draw(self, surface):
         surface.fill(colour.WHITE)
-
-        xMax, yMax = surface.get_size()
 
         # Draw 5x5 grid
         self.grid.draw(surface)
 
         # Draw beads
         for x, y in itertools.product(range(self.size), range(self.size)):
-            if (self.getSpace((x,y)).isP1()):
-                pixelCoor = self.grid.getBoxCentre((x,y))
-                pygame.draw.circle(surface, colour.RED, pixelCoor, int(xMax/float(20)))
-            if (self.getSpace((x,y)).isP2()):
-                pixelCoor = self.grid.getBoxCentre((x,y))
-                pygame.draw.circle(surface, colour.BLUE, pixelCoor, int(xMax/float(20)))
+            # Get bead coordinate from grid
+            pixelCoor = self.grid.getBoxCentre((x,y))
+            # Draw bead
+            self.getSpace((x,y)).draw(surface, pixelCoor)
