@@ -47,6 +47,8 @@ class Game:
         self.display = display
         self.p1Turn = False # Will be set to true by updateState call
 
+        self.isFinished = False
+
         self.inRemoval = False
         self.stagedForRemoval = None
 
@@ -80,6 +82,7 @@ class Game:
     def updateState(self):
         logging.info("Updating game state")
         if (self.board.isVictory()):
+            self.isFinished = True
             logging.info("Player {} wins!".format("1" if self.isP1Turn() else "2"))
         elif (self.board.isFull()):
             logging.info("Board full. Entering clearance mode")
@@ -97,7 +100,7 @@ class Game:
 
 
     def processClick(self, pos):
-        if (self.board.isOnGrid(pos)):
+        if (self.board.isOnGrid(pos) and not self.isFinished):
             coor = self.board.getCoor(pos)
             logging.info("Click signal received on grid: coordinate ({} {})".format(*coor))
 
