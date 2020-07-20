@@ -42,6 +42,9 @@ class Game:
         self.board = board
         self.p1Turn = True
 
+        self.inRemoval = False
+        self.stagedForRemoval = None
+
         # Used to remove beads when board is full
         self.inClearance = False
         self.clearance = 0
@@ -86,6 +89,26 @@ class Game:
                     elif (self.isP2Turn() and not self.board.isSpaceSurroundedByP1(coor)):
                         self.board.setP2(coor)
                         self.updateState()
+                else:
+                    if (self.inRemoval):
+                        if (coor  == self.stagedForRemoval):
+                            self.board.unsetHighlight()
+                            self.stagedForRemoval = None
+                            self.inRemoval = False
+                        elif (self.board.areP1AndP2(coor, self.stagedForRemoval)):
+                            self.board.setEmpty(coor)
+                            self.board.setEmpty(self.stagedForRemoval)
+
+                            self.board.unsetHighlight()
+                            self.stagedForRemoval = None
+                            self.inRemoval = False
+
+                            self.updateState()
+                    else:
+                        self.board.setHighlight(coor)
+                        self.inRemoval = True
+                        self.stagedForRemoval = coor
+
             else:
                 # Process clearance. Can only remove own beads
                 if ((self.isP1Turn() and self.board.isP1(coor)) or (self.isP2Turn() and self.board.isP2(coor))):

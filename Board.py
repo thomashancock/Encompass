@@ -89,6 +89,8 @@ class Board:
 
         self.beadRadius = int(xMax/float(20))
 
+        self.highlight = None
+
 
     def getCoor(self, pos):
         '''
@@ -140,6 +142,18 @@ class Board:
         return (self._getSpace(coor) == -1)
 
 
+    def areP1AndP2(self, coor1, coor2):
+        return ((self._getSpace(coor1) * self._getSpace(coor2)) < 0)
+
+
+    def setHighlight(self, coor):
+        self.highlight = coor
+
+
+    def unsetHighlight(self):
+        self.highlight = None
+
+
     def countP1Beads(self):
         return sum([i.count(1) for i in self.array])
 
@@ -173,7 +187,6 @@ class Board:
             right = (coor[0]-1, coor[1])
             permuts = [up, down, left, right]
             count = sum(self._getSpace(perm) for perm in permuts)
-            logging.info("{} {}: {}".format(*coor, count))
             if count in matches:
                 return True
             else:
@@ -198,7 +211,7 @@ class Board:
             coor = (x,y)
             if self.isSpaceSurrounded(coor):
                 # Check if centre and outside have different coloured beads
-                if self._getSpace(coor) * self._getSpace((x, y+1)) < 0:
+                if self.areP1AndP2(coor, (x, y+1)):
                     return True
         return False
 
@@ -212,7 +225,8 @@ class Board:
         # Draw beads
         for x, y in itertools.product(range(self.size), range(self.size)):
             coor = (x,y)
+            width = 1 if self.highlight == coor else 0
             if self._getSpace(coor) > 0:
-                pygame.draw.circle(surface, colour.RED, self.grid.getBoxCentre(coor), self.beadRadius)
+                pygame.draw.circle(surface, colour.RED, self.grid.getBoxCentre(coor), self.beadRadius, width)
             elif self._getSpace(coor) < 0:
-                pygame.draw.circle(surface, colour.BLUE, self.grid.getBoxCentre(coor), self.beadRadius)
+                pygame.draw.circle(surface, colour.BLUE, self.grid.getBoxCentre(coor), self.beadRadius, width)
