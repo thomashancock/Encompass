@@ -9,77 +9,77 @@ logger = logging.getLogger(__file__)
 import Colours as colour
 
 
-class Space:
-    '''
-    Records the status of a single space. Can be empty, P1 or P2
-    '''
-    def __init__(self, radius):
-        self.state = "empty"
-        self.sprite = None
-        self.radius = radius
-
-
-    def __repr__(self):
-        return '{space state:{0}}'.format(self.state)
-
-
-    def __str__(self):
-        if not self._validateState():
-            return f"Error.Invalid state: {self.state}"
-        if self.state == "empty":
-            return 0
-        if self.state == "P1":
-            return 1
-        if self.state == "P2":
-            return 2
-
-
-    def _validateState(self):
-        return (self.state in ["empty", "P1", "P2"])
-
-
-    def setEmpty(self):
-        self.state = "empty"
-
-
-    def setP1(self):
-        self.state = "P1"
-
-
-    def setP2(self):
-        self.state = "P2"
-
-
-    def isEmpty(self):
-        return self.state == "empty"
-
-
-    def isP1(self):
-        return self.state == "P1"
-
-
-    def isP2(self):
-        return self.state == "P2"
-
-
-    def draw(self, surface, pos):
-        if not self._validateState():
-            return f"Error.Invalid state: {self.state}"
-        elif self.state == "P1":
-            self.sprite = pygame.draw.circle(surface, colour.RED, pos, self.radius)
-        elif self.state == "P2":
-            self.sprite = pygame.draw.circle(surface, colour.BLUE, pos, self.radius)
-        else:
-            self.sprite = None
-
-
-    def isOnBead(self, pos):
-        if self.sprite == None:
-            return False
-        elif self.sprite.collidepoint(pos):
-            return True
-        else:
-            return False
+# class Space:
+#     '''
+#     Records the status of a single space. Can be empty, P1 or P2
+#     '''
+#     def __init__(self, radius):
+#         self.state = "empty"
+#         self.sprite = None
+#         self.radius = radius
+#
+#
+#     def __repr__(self):
+#         return '{space state:{0}}'.format(self.state)
+#
+#
+#     def __str__(self):
+#         if not self._validateState():
+#             return f"Error.Invalid state: {self.state}"
+#         if self.state == "empty":
+#             return 0
+#         if self.state == "P1":
+#             return 1
+#         if self.state == "P2":
+#             return 2
+#
+#
+#     def _validateState(self):
+#         return (self.state in ["empty", "P1", "P2"])
+#
+#
+#     def setEmpty(self):
+#         self.state = "empty"
+#
+#
+#     def setP1(self):
+#         self.state = "P1"
+#
+#
+#     def setP2(self):
+#         self.state = "P2"
+#
+#
+#     def isEmpty(self):
+#         return self.state == "empty"
+#
+#
+#     def isP1(self):
+#         return self.state == "P1"
+#
+#
+#     def isP2(self):
+#         return self.state == "P2"
+#
+#
+#     def draw(self, surface, pos):
+#         if not self._validateState():
+#             return f"Error.Invalid state: {self.state}"
+#         elif self.state == "P1":
+#             self.sprite = pygame.draw.circle(surface, colour.RED, pos, self.radius)
+#         elif self.state == "P2":
+#             self.sprite = pygame.draw.circle(surface, colour.BLUE, pos, self.radius)
+#         else:
+#             self.sprite = None
+#
+#
+#     def isOnBead(self, pos):
+#         if self.sprite == None:
+#             return False
+#         elif self.sprite.collidepoint(pos):
+#             return True
+#         else:
+#             return False
 
 
 class Grid:
@@ -150,21 +150,32 @@ class Board:
     def __init__(self, surface):
         self.size = 5
 
-        xMax, yMax = surface.get_size()
-        beadRadius = int(xMax/float(20))
-        self.array = [[Space(beadRadius) for _ in range(self.size)] for _ in range(self.size)]
+        self.array = [[0 for _ in range(self.size)] for _ in range(self.size)]
 
         # Define grid size to be 5/7ths of the width of the window
+        xMax, yMax = surface.get_size()
         self.grid = Grid(
             self.size,
             (1*xMax/float(7), 1*yMax/float(7)),
             (5*xMax/float(7), 5*yMax/float(7)),
         )
 
+        self.beadRadius = int(xMax/float(20))
+
 
     def getSpace(self, coor):
         xCoor, yCoor = coor
         return self.array[xCoor][yCoor]
+
+
+    def setSpace(self, coor, val):
+        xCoor, yCoor = coor
+        self.array[xCoor][yCoor] = val
+
+
+    def isOnBead(self, coor, pos):
+        centre = self.grid.getBoxCentre(coor)
+        return ((centre[0] - pos[0])**2) + ((centre[1] - pos[1])**2) < self.beadRadius**2
 
 
     def processClick(self, pos):
@@ -173,15 +184,15 @@ class Board:
             logging.info("Click signal received: coordinate ({} {})".format(*clickCoor))
 
             space = self.getSpace(clickCoor)
-            if (space.isEmpty()):
+            if (space == 0):
                 logging.info("Set ({} {}) to P1".format(*clickCoor))
-                space.setP1()
-            elif (space.isP1() and space.isOnBead(pos)):
-                space.setP2()
+                self.setSpace(clickCoor, 1)
+            elif (space == 1 and self.isOnBead(clickCoor, pos)):
                 logging.info("Set ({} {}) to P2".format(*clickCoor))
-            elif (space.isP2() and space.isOnBead(pos)):
-                space.setEmpty()
+                self.setSpace(clickCoor, -1)
+            elif (space == -1 and self.isOnBead(clickCoor, pos)):
                 logging.info("Set ({} {}) to empty".format(*clickCoor))
+                self.setSpace(clickCoor, 0)
 
         else:
             logging.info("Click signal received: position ({} {})".format(*pos))
@@ -195,7 +206,8 @@ class Board:
 
         # Draw beads
         for x, y in itertools.product(range(self.size), range(self.size)):
-            # Get bead coordinate from grid
-            pixelCoor = self.grid.getBoxCentre((x,y))
-            # Draw bead
-            self.getSpace((x,y)).draw(surface, pixelCoor)
+            coor = (x,y)
+            if self.getSpace(coor) > 0:
+                pygame.draw.circle(surface, colour.RED, self.grid.getBoxCentre(coor), self.beadRadius)
+            elif self.getSpace(coor) < 0:
+                pygame.draw.circle(surface, colour.BLUE, self.grid.getBoxCentre(coor), self.beadRadius)
