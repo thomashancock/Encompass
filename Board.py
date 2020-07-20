@@ -14,8 +14,7 @@ class Space:
     Records the status of a single space. Can be empty, P1 or P2
     '''
     def __init__(self):
-        self.state="P1"
-        # self.state="empty"
+        self.state="empty"
 
 
     def __repr__(self):
@@ -105,6 +104,13 @@ class Grid:
         return int(xOrig + getAlongAxis(x, xDim)), int(yOrig + getAlongAxis(y, yDim))
 
 
+    def isOnGrid(self, pos):
+        for i in [0, 1]:
+            if (pos[i] < self.origin[i] or pos[i] > self.origin[i] + self.dimensions[i]):
+                return False
+        return True
+
+
     def getGridCoor(self, pos):
         xPosRel, yPosRel = pos[0] - self.origin[0], pos[1] - self.origin[1]
 
@@ -132,12 +138,26 @@ class Board:
         )
 
 
-    def getSpace(self, xCoor, yCoor):
+    def getSpace(self, coor):
+        xCoor, yCoor = coor
         return self.array[xCoor][yCoor]
 
 
     def processClick(self, pos):
-        logging.info("Click signal received: coordinate {} {}".format(*self.grid.getGridCoor(pos)))
+        if (self.grid.isOnGrid(pos)):
+            clickCoor = self.grid.getGridCoor(pos)
+            logging.info("Click signal received: coordinate {} {}".format(*clickCoor))
+
+            space = self.getSpace(clickCoor)
+            if (space.isEmpty()):
+                space.setP1()
+            elif (space.isP1()):
+                space.setP2()
+            else:
+                space.setEmpty()
+
+        else:
+            logging.info("Click signal received: position {} {}".format(*pos))
 
 
     def draw(self, surface):
@@ -150,6 +170,9 @@ class Board:
 
         # Draw beads
         for x, y in itertools.product(range(self.size), range(self.size)):
-            if (self.getSpace(x,y).isP1()):
+            if (self.getSpace((x,y)).isP1()):
                 pixelCoor = self.grid.getBoxCentre((x,y))
                 pygame.draw.circle(surface, colour.RED, pixelCoor, int(xMax/float(20)))
+            if (self.getSpace((x,y)).isP2()):
+                pixelCoor = self.grid.getBoxCentre((x,y))
+                pygame.draw.circle(surface, colour.BLUE, pixelCoor, int(xMax/float(20)))
