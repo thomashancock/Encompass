@@ -162,10 +162,10 @@ class Board:
         return ((0 in coor) or (self.size -1 in coor))
 
 
-    def isSpaceSurrounded(self, coor):
+    def _isSpaceSurrounded(self, coor, matches=[4, -4]):
         if (self._isOnBorder(coor)):
             # Border squares cannot be surrounded
-            return false
+            return False
         else:
             up = (coor[0], coor[1]+1)
             down = (coor[0], coor[1]-1)
@@ -174,11 +174,22 @@ class Board:
             permuts = [up, down, left, right]
             count = sum(self._getSpace(perm) for perm in permuts)
             logging.info("{} {}: {}".format(*coor, count))
-            if abs(count) == 4:
-                logging.info("Returning true!")
+            if count in matches:
                 return True
             else:
                 return False
+
+
+    def isSpaceSurrounded(self, coor):
+        return self._isSpaceSurrounded(coor, matches=[4, -4])
+
+
+    def isSpaceSurroundedByP1(self, coor):
+        return self._isSpaceSurrounded(coor, matches=[4])
+
+
+    def isSpaceSurroundedByP2(self, coor):
+        return self._isSpaceSurrounded(coor, matches=[-4])
 
 
     def isVictory(self):

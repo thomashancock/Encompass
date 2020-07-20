@@ -80,10 +80,10 @@ class Game:
 
             if (self.clearance == 0):
                 if (self.board.isSpaceEmpty(coor)):
-                    if (self.isP1Turn()):
+                    if (self.isP1Turn() and not self.board.isSpaceSurroundedByP2(coor)):
                         self.board.setP1(coor)
                         self.updateState()
-                    else:
+                    elif (self.isP2Turn() and not self.board.isSpaceSurroundedByP1(coor)):
                         self.board.setP2(coor)
                         self.updateState()
             else:
