@@ -1,4 +1,5 @@
 import sys
+import itertools
 
 # Setup logging
 import logging
@@ -35,7 +36,8 @@ class Space:
     Records the status of a single space. Can be empty, P1 or P2
     '''
     def __init__(self):
-        self.state="empty"
+        self.state="P1"
+        # self.state="empty"
 
 
     def __repr__(self):
@@ -57,28 +59,28 @@ class Space:
         return (self.state in ["empty", "p1", "p2"])
 
 
-    def setEmpty():
+    def setEmpty(self):
         self.state = "empty"
 
 
-    def setP1():
+    def setP1(self):
         self.state = "P1"
 
 
-    def setP2():
+    def setP2(self):
         self.state = "P2"
 
 
-    def isEmpty():
-        return state == "empty"
+    def isEmpty(self):
+        return self.state == "empty"
 
 
-    def isP1():
-        return state == "P1"
+    def isP1(self):
+        return self.state == "P1"
 
 
-    def isP2():
-        return state == "P2"
+    def isP2(self):
+        return self.state == "P2"
 
 
 class Board:
@@ -87,8 +89,22 @@ class Board:
         self.array = [[Space() for _ in range(self.size)] for _ in range(self.size)]
 
 
-    def getSpace(xCoor, yCoor):
+    def getSpace(self, xCoor, yCoor):
         return self.array[xCoor][yCoor]
+
+
+    def _getSpaceCoor(self, spaceCoor, surface):
+        x, y = spaceCoor
+        assert(x > -1)
+        assert(x < self.size)
+        assert(y > -1)
+        assert(y < self.size)
+
+        def getAlongAxis(n, max):
+            return (1.5 + n)*max/float(7)
+
+        xMax, yMax = surface.get_size()
+        return int(getAlongAxis(x, xMax)), int(getAlongAxis(y, yMax))
 
 
     def draw(self, surface):
@@ -102,7 +118,10 @@ class Board:
             # Vertical lines
             pygame.draw.line(surface, GREY, (1*xMax/float(7), i*yMax/float(7)), (6*xMax/float(7), i*yMax/float(7)))
 
-
+        # Draw beads
+        for x, y in itertools.product(range(self.size), range(self.size)):
+            if (self.getSpace(x,y).isP1()):
+                pygame.draw.circle(surface, RED, self._getSpaceCoor((x,y), surface), int(xMax/float(20)))
 
 
 class World:
