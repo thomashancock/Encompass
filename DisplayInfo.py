@@ -15,10 +15,15 @@ class DisplayInfo:
 
         self.activePlayer = None
         self.beadsRemaining = {1: 17, -1:17}
+        self.hasEnded = False
 
 
     def setActivePlayer(self, player):
         self.activePlayer = player
+
+
+    def setVictory(self):
+        self.hasEnded = True
 
 
     def setP1BeadsRemaining(self, nBeads):
@@ -33,9 +38,10 @@ class DisplayInfo:
         xMax, yMax = surface.get_size()
 
         # Draw active player
-        textPlayerTurn = self.font.render(f"Active Player: {self.activePlayer}", False, colour.BLACK)
-        textPlayerTurnRect = textPlayerTurn.get_rect(center=(xMax/float(2), yMax/float(14)))
-        surface.blit(textPlayerTurn, textPlayerTurnRect)
+        centreStr = f"{self.activePlayer} Wins!" if self.hasEnded else f"Active Player: {self.activePlayer}"
+        centreText = self.font.render(centreStr, False, colour.BLACK)
+        centreTextRect = centreText.get_rect(center=(xMax/float(2), yMax/float(14)))
+        surface.blit(centreText, centreTextRect)
 
         # Draw beads remaining
         for i, nBeads in self.beadsRemaining.items():

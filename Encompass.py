@@ -83,15 +83,18 @@ class Game:
         logging.info("Updating game state")
         if (self.board.isVictory()):
             self.isFinished = True
+            self.display.setVictory()
             logging.info("Player {} wins!".format("1" if self.isP1Turn() else "2"))
         elif (self.board.isFull()):
             logging.info("Board full. Entering clearance mode")
             self.clearance = 6
             self.inClearance = True
+            self.updateTurn()
         elif (self.inClearance and self.clearance == 0):
             logging.info("End of clearance mode")
-
-        self.updateTurn()
+            self.updateTurn()
+        else:
+            self.updateTurn()
 
         # Update display
         self.display.setActivePlayer("Red" if self.isP1Turn() else "Blue")
