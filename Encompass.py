@@ -14,6 +14,8 @@ import LoggerSettings
 # Local Imports
 from Actions import *
 from Board import Board
+from DisplayInfo import DisplayInfo
+import Colours as colour
 
 
 class Input:
@@ -37,10 +39,13 @@ class Game:
     '''
     Handles Game Logic
     '''
-    def __init__(self, board):
+    def __init__(self, display, board):
+        self.startingBeads = 17
+
         # Store a pointer to the board
         self.board = board
-        self.p1Turn = True
+        self.display = display
+        self.p1Turn = False # Will be set to true by updateState call
 
         self.inRemoval = False
         self.stagedForRemoval = None
@@ -49,6 +54,8 @@ class Game:
         self.inClearance = False
         self.clearance = 0
 
+        self.updateState()
+
 
     def isP1Turn(self):
         return self.p1Turn
@@ -56,6 +63,14 @@ class Game:
 
     def isP2Turn(self):
         return not self.p1Turn
+
+
+    def getP1NBeads(self):
+        return self.startingBeads - self.board.countP1Beads()
+
+
+    def getP2NBeads(self):
+        return self.startingBeads - self.board.countP2Beads()
 
 
     def updateTurn(self):
@@ -75,6 +90,11 @@ class Game:
 
         self.updateTurn()
 
+        # Update display
+        self.display.setActivePlayer("Red" if self.isP1Turn() else "Blue")
+        self.display.setP1BeadsRemaining(self.getP1NBeads())
+        self.display.setP2BeadsRemaining(self.getP2NBeads())
+
 
     def processClick(self, pos):
         if (self.board.isOnGrid(pos)):
@@ -82,32 +102,31 @@ class Game:
             logging.info("Click signal received on grid: coordinate ({} {})".format(*coor))
 
             if (self.clearance == 0):
-                if (self.board.isSpaceEmpty(coor)):
-                    if (self.isP1Turn() and not self.board.isSpaceSurroundedByP2(coor)):
+                if (self.inRemoval):
+                    if (coor  == self.stagedForRemoval):
+                        self.board.unsetHighlight()
+                        self.stagedForRemoval = None
+                        self.inRemoval = False
+                    elif (self.board.areP1AndP2(coor, self.stagedForRemoval)):
+                        self.board.setEmpty(coor)
+                        self.board.setEmpty(self.stagedForRemoval)
+
+                        self.board.unsetHighlight()
+                        self.stagedForRemoval = None
+                        self.inRemoval = False
+
+                        self.updateState()
+                elif (self.board.isSpaceEmpty(coor)):
+                    if (self.isP1Turn() and not self.board.isSpaceSurroundedByP2(coor) and self.getP1NBeads() > 0):
                         self.board.setP1(coor)
                         self.updateState()
-                    elif (self.isP2Turn() and not self.board.isSpaceSurroundedByP1(coor)):
+                    elif (self.isP2Turn() and not self.board.isSpaceSurroundedByP1(coor) and self.getP2NBeads() > 0):
                         self.board.setP2(coor)
                         self.updateState()
                 else:
-                    if (self.inRemoval):
-                        if (coor  == self.stagedForRemoval):
-                            self.board.unsetHighlight()
-                            self.stagedForRemoval = None
-                            self.inRemoval = False
-                        elif (self.board.areP1AndP2(coor, self.stagedForRemoval)):
-                            self.board.setEmpty(coor)
-                            self.board.setEmpty(self.stagedForRemoval)
-
-                            self.board.unsetHighlight()
-                            self.stagedForRemoval = None
-                            self.inRemoval = False
-
-                            self.updateState()
-                    else:
-                        self.board.setHighlight(coor)
-                        self.inRemoval = True
-                        self.stagedForRemoval = coor
+                    self.board.setHighlight(coor)
+                    self.inRemoval = True
+                    self.stagedForRemoval = coor
 
             else:
                 # Process clearance. Can only remove own beads
@@ -134,8 +153,9 @@ class World:
 
         self.input = Input()
 
+        self.display = DisplayInfo()
         self.board = Board(self.surface)
-        self.game = Game(self.board)
+        self.game = Game(self.display, self.board)
 
 
     def _processAction(self, action):
@@ -157,6 +177,8 @@ class World:
                 self._processAction(action)
 
             # Draw objects
+            self.surface.fill(colour.WHITE)
+            self.display.draw(self.surface)
             self.board.draw(self.surface)
 
             # Update display

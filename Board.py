@@ -217,8 +217,6 @@ class Board:
 
 
     def draw(self, surface):
-        surface.fill(colour.WHITE)
-
         # Draw 5x5 grid
         self.grid.draw(surface)
 
