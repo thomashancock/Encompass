@@ -14,7 +14,11 @@ class Grid:
         self.nSpaces = nSpaces
         self.origin = origin
         self.dimensions = dimensions
+        self.victoryCoor = None
 
+
+    def setVictoryCoor(self, coor):
+        self.victoryCoor = coor
 
     def draw(self, surface):
         '''
@@ -33,6 +37,19 @@ class Grid:
             pygame.draw.line(surface, colour.GREY,
                 (xOrig       , yOrig + i*yDim/float(self.nSpaces)),
                 (xOrig + xDim, yOrig + i*yDim/float(self.nSpaces)))
+
+        if self.victoryCoor:
+            x, y = self.getBoxCentre(self.victoryCoor)
+            vert = pygame.locals.Rect(
+                x - 10, y - 1.5*yDim/float(self.nSpaces),
+                20, 3*yDim/float(self.nSpaces)
+                )
+            horiz = pygame.locals.Rect(
+                x - 1.5*xDim/float(self.nSpaces), y - 10,
+                3*xDim/float(self.nSpaces), 20
+                )
+            pygame.draw.rect(surface, colour.BLACK, vert)
+            pygame.draw.rect(surface, colour.BLACK, horiz)
 
 
     def getBoxCentre(self, coor):
@@ -212,6 +229,7 @@ class Board:
             if self.isSpaceSurrounded(coor):
                 # Check if centre and outside have different coloured beads
                 if self.areP1AndP2(coor, (x, y+1)):
+                    self.grid.setVictoryCoor(coor)
                     return True
         return False
 
