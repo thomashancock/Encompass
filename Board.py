@@ -181,11 +181,11 @@ class Board:
             # Border squares cannot be surrounded
             return False
         else:
-            up = (coor[0], coor[1]+1)
-            down = (coor[0], coor[1]-1)
-            left = (coor[0]+1, coor[1])
-            right = (coor[0]-1, coor[1])
-            permuts = [up, down, left, right]
+            permuts = [
+                (coor[0], coor[1]+1),
+                (coor[0], coor[1]-1),
+                (coor[0]+1, coor[1]),
+                (coor[0]-1, coor[1]) ]
             count = sum(self._getSpace(perm) for perm in permuts)
             if count in matches:
                 return True
