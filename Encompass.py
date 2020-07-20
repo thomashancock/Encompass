@@ -124,6 +124,18 @@ class Board:
                 pygame.draw.circle(surface, RED, self._getSpaceCoor((x,y), surface), int(xMax/float(20)))
 
 
+class Input:
+    def __init__(self):
+        pass
+
+    def parseInputs(self):
+        for event in pygame.event.get():
+            # Detect Quit Action
+            if event.type == pygame.locals.QUIT:
+                pygame.quit()
+                sys.exit()
+
+
 class World:
     '''
     World class
@@ -134,14 +146,9 @@ class World:
 
         self.clock = pygame.time.Clock()
 
+        self.input = Input()
+
         self.entities = [Board()]
-
-
-    # def addEntity(self, entity):
-    #     '''
-    #     Add an entity for the world to track
-    #     '''
-    #     self.entities.append(entity)
 
 
     def run(self):
@@ -149,11 +156,7 @@ class World:
         Runs the game
         '''
         while True:
-            for event in pygame.event.get():
-                # Detect Quit Action
-                if event.type == pygame.locals.QUIT:
-                    pygame.quit()
-                    sys.exit()
+            self.input.parseInputs()
 
             # Update objects
             self.surface.fill(WHITE)
