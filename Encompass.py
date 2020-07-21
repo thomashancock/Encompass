@@ -23,7 +23,7 @@ import Colours as colour
 class World:
     '''
     World class
-    Manages and runs the game
+    Manages and runs the simulation
     '''
     def __init__(self, width, height):
         self.surface = pygame.display.set_mode((width, height))
@@ -42,7 +42,7 @@ class World:
             pygame.quit()
             sys.exit()
         elif action.getActionType() == "MOUSEBUTTONUP":
-            self.game.processClick(action.getPos())
+            self.game.processClick(action.getPos(), self.surface)
         elif action.getActionType() == "KEYUP":
             self.game.processKey(action.getKey())
 

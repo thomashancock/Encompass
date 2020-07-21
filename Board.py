@@ -111,15 +111,35 @@ class Board:
 
         self.beadRadius = int(xMax/float(20))
 
+        # Used to highlight beads during removal
         self.highlight = None
 
 
     def reset(self):
+        '''
+        Resets the board, removing all beads and highlights
+        '''
         self.grid.reset()
         for x, y in itertools.product(range(self.size), range(self.size)):
             self.setEmpty((x,y))
         self.highlight = None
 
+
+    def draw(self, surface):
+        # Draw 5x5 grid
+        self.grid.draw(surface)
+
+        # Draw beads
+        for x, y in itertools.product(range(self.size), range(self.size)):
+            coor = (x,y)
+            width = 1 if self.highlight == coor else 0
+            if self._getSpace(coor) > 0:
+                pygame.draw.circle(surface, colour.RED, self.grid.getBoxCentre(coor), self.beadRadius, width)
+            elif self._getSpace(coor) < 0:
+                pygame.draw.circle(surface, colour.BLUE, self.grid.getBoxCentre(coor), self.beadRadius, width)
+
+
+    ### Position Detection Functions
 
     def getCoor(self, pos):
         '''
@@ -129,21 +149,47 @@ class Board:
 
 
     def isOnGrid(self, pos):
+        '''
+        Detect if position is on the grid
+        '''
         return self.grid.isOnGrid(pos)
 
 
     def isOnBead(self, coor, pos):
-        centre = self.grid.getBoxCentre(coor)
-        return ((centre[0] - pos[0])**2) + ((centre[1] - pos[1])**2) < self.beadRadius**2
+        '''
+        Detect if position is on a bead
+        '''
+        if (self.isSpaceEmpty(coor)):
+            # If space is empty, cannot be on a bead
+            return False
+        else:
+            # If space has a bead, check position falls within radius
+            centre = self.grid.getBoxCentre(coor)
+            return ((centre[0] - pos[0])**2) + ((centre[1] - pos[1])**2) < self.beadRadius**2
 
+    ### Space-related Functions
 
     def _getSpace(self, coor):
+        '''
+        Helper function for accessing the space at a specific coordinate
+        '''
         xCoor, yCoor = coor
+        assert(xCoor > -1)
+        assert(xCoor < self.size)
+        assert(yCoor > -1)
+        assert(yCoor < self.size)
         return self.array[xCoor][yCoor]
 
 
     def _setSpace(self, coor, val):
+        '''
+        Helper function for accessing the space at a specific coordinate
+        '''
         xCoor, yCoor = coor
+        assert(xCoor > -1)
+        assert(xCoor < self.size)
+        assert(yCoor > -1)
+        assert(yCoor < self.size)
         self.array[xCoor][yCoor] = val
 
 
@@ -172,6 +218,9 @@ class Board:
 
 
     def areP1AndP2(self, coor1, coor2):
+        '''
+        Returns whether two spaces are controled by different players
+        '''
         return ((self._getSpace(coor1) * self._getSpace(coor2)) < 0)
 
 
@@ -182,6 +231,7 @@ class Board:
     def unsetHighlight(self):
         self.highlight = None
 
+    ### Board-related Functions
 
     def countP1Beads(self):
         return sum([i.count(1) for i in self.array])
@@ -234,6 +284,72 @@ class Board:
         return self._isSpaceSurrounded(coor, matches=[-4])
 
 
+    def _isRowEmpty(self, rowNo):
+        for x in range(self.size):
+            if (not self._getSpace((x, rowNo)) == 0):
+                return False
+        return True
+
+
+    def _isColEmpty(self, colNo):
+        for y in range(self.size):
+            if (not self._getSpace((colNo, y)) == 0):
+                return False
+        return True
+
+
+    def canShiftUp(self):
+        return self._isRowEmpty(0)
+
+
+    def canShiftDown(self):
+        return self._isRowEmpty(self.size - 1)
+
+
+    def canShiftLeft(self):
+        return self._isColEmpty(0)
+
+
+    def canShiftRight(self):
+        return self._isColEmpty(self.size - 1)
+
+
+    def shiftUp(self):
+        assert(self.canShiftUp())
+        for y in range(1, self.size):
+            for x in range(self.size):
+                self._setSpace((x,y - 1), self._getSpace((x,y)))
+                if (y == self.size - 1):
+                    self.setEmpty((x, y))
+
+
+    def shiftDown(self):
+        assert(self.canShiftDown())
+        for y in range(self.size - 1, 0, -1):
+            for x in range(self.size):
+                self._setSpace((x,y), self._getSpace((x, y - 1)))
+                if (y == 1):
+                    self.setEmpty((x, y - 1))
+
+
+    def shiftLeft(self):
+        assert(self.canShiftLeft())
+        for x in range(1, self.size):
+            for y in range(self.size):
+                self._setSpace((x - 1, y), self._getSpace((x,y)))
+                if (x == self.size - 1):
+                    self.setEmpty((x, y))
+
+
+    def shiftRight(self):
+        assert(self.canShiftRight())
+        for x in range(self.size - 1, 0, -1):
+            for y in range(self.size):
+                self._setSpace((x,y), self._getSpace((x - 1, y)))
+                if (x == 1):
+                    self.setEmpty((x - 1, y))
+
+
     def isVictory(self):
         logging.info("Checking for victory")
         for x, y in itertools.product(range(1, self.size-1), range(1, self.size-1)):
@@ -244,17 +360,3 @@ class Board:
                     self.grid.setVictoryCoor(coor)
                     return True
         return False
-
-
-    def draw(self, surface):
-        # Draw 5x5 grid
-        self.grid.draw(surface)
-
-        # Draw beads
-        for x, y in itertools.product(range(self.size), range(self.size)):
-            coor = (x,y)
-            width = 1 if self.highlight == coor else 0
-            if self._getSpace(coor) > 0:
-                pygame.draw.circle(surface, colour.RED, self.grid.getBoxCentre(coor), self.beadRadius, width)
-            elif self._getSpace(coor) < 0:
-                pygame.draw.circle(surface, colour.BLUE, self.grid.getBoxCentre(coor), self.beadRadius, width)
