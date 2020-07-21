@@ -13,17 +13,31 @@ class DisplayInfo:
     def __init__(self):
         self.font = pygame.font.SysFont('Comic Sans MS', 30)
 
-        self.activePlayer = None
         self.beadsRemaining = {1: 17, -1:17}
-        self.hasEnded = False
+        # self.activePlayer = None
+        # self.hasEnded = False
+
+        self.topStr = None
+        self.bottomStr = None
 
 
-    def setActivePlayer(self, player):
-        self.activePlayer = player
+    # def setActivePlayer(self, player):
+    #     self.activePlayer = player
 
 
-    def setVictory(self):
-        self.hasEnded = True
+    # def setVictory(self):
+    #     self.hasEnded = True
+
+    def setTopText(self, str):
+        self.topStr = str
+
+
+    def setBottomText(self, str):
+        self.bottomStr = str
+
+
+    def eraseBottomText(self):
+        self.bottomStr = None
 
 
     def setP1BeadsRemaining(self, nBeads):
@@ -38,10 +52,14 @@ class DisplayInfo:
         xMax, yMax = surface.get_size()
 
         # Draw active player
-        centreStr = f"{self.activePlayer} Wins!" if self.hasEnded else f"Active Player: {self.activePlayer}"
-        centreText = self.font.render(centreStr, False, colour.BLACK)
-        centreTextRect = centreText.get_rect(center=(xMax/float(2), yMax/float(14)))
-        surface.blit(centreText, centreTextRect)
+        topText = self.font.render(self.topStr, False, colour.BLACK)
+        topTextRect = topText.get_rect(center=(xMax/float(2), yMax/float(14)))
+        surface.blit(topText, topTextRect)
+
+        if self.bottomStr:
+            bottomText = self.font.render(self.bottomStr, False, colour.BLACK)
+            bottomTextRect = bottomText.get_rect(center=(xMax/float(2), 13*yMax/float(14)))
+            surface.blit(bottomText, bottomTextRect)
 
         # Draw beads remaining
         for i, nBeads in self.beadsRemaining.items():
