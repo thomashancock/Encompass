@@ -113,7 +113,7 @@ class Game:
             self.display.setTopText("{} Wins!".format("Red" if self.isP1Turn() else "Blue"))
             self.display.setBottomText("Press Space to replay!")
         elif (self.inClearance):
-            self.display.setBottomText("Clearance! Can only remove beads.")
+            self.display.setBottomText(f"Clearance! Removals remaining: {self.clearance}")
         else:
             self.display.eraseBottomText()
 
