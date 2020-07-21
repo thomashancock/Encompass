@@ -17,8 +17,13 @@ class Grid:
         self.victoryCoor = None
 
 
+    def reset(self):
+        self.victoryCoor = None
+
+
     def setVictoryCoor(self, coor):
         self.victoryCoor = coor
+
 
     def draw(self, surface):
         '''
@@ -106,6 +111,13 @@ class Board:
 
         self.beadRadius = int(xMax/float(20))
 
+        self.highlight = None
+
+
+    def reset(self):
+        self.grid.reset()
+        for x, y in itertools.product(range(self.size), range(self.size)):
+            self.setEmpty((x,y))
         self.highlight = None
 
 

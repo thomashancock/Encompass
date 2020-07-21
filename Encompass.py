@@ -45,6 +45,13 @@ class Game:
 
     def reset(self):
         logging.info("Resetting game state")
+        self.board.reset()
+        self.isFinished = False
+        self.inRemoval = False
+        self.stagedForRemoval = None
+        self.inClearance = False
+        self.clearance = 0
+        self.updateState()
 
 
     def isP1Turn(self):
@@ -74,9 +81,9 @@ class Game:
         self.display.setP2BeadsRemaining(self.getP2NBeads())
         if (self.isFinished):
             self.display.setTopText("{} Wins!".format("Red" if self.isP1Turn() else "Blue"))
-            self.display.setBottomText("Game ended.")
+            self.display.setBottomText("Press Space to replay!")
         elif (self.inClearance):
-            self.display.setBottomText("In clearance. Beads can only be removed.")
+            self.display.setBottomText("Clearance! Can only remove beads.")
         else:
             self.display.eraseBottomText()
 
