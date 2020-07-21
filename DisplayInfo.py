@@ -14,19 +14,11 @@ class DisplayInfo:
         self.font = pygame.font.SysFont('Comic Sans MS', 30)
 
         self.beadsRemaining = {1: 17, -1:17}
-        # self.activePlayer = None
-        # self.hasEnded = False
+        self.scores = {1: 0, -1:0}
 
         self.topStr = None
         self.bottomStr = None
 
-
-    # def setActivePlayer(self, player):
-    #     self.activePlayer = player
-
-
-    # def setVictory(self):
-    #     self.hasEnded = True
 
     def setTopText(self, str):
         self.topStr = str
@@ -46,6 +38,14 @@ class DisplayInfo:
 
     def setP2BeadsRemaining(self, nBeads):
         self.beadsRemaining[-1] = nBeads
+
+
+    def setP1Score(self, score):
+        self.scores[1] = score
+
+
+    def setP2Score(self, score):
+        self.scores[-1] = score
 
 
     def draw(self, surface):
@@ -71,3 +71,14 @@ class DisplayInfo:
             textBeadsRemaining = self.font.render("{}".format(nBeads), False, colour.BLACK)
             textBeadsRemainingRect = textBeadsRemaining.get_rect(center=textPos)
             surface.blit(textBeadsRemaining, textBeadsRemainingRect)
+
+        # Draw scores remaining
+        for i, score in self.scores.items():
+            textPos = (int(((6 - i*5)*xMax)/float(12)), int(13*yMax/float(14)))
+
+            radius = int(xMax/float(24))
+            pygame.draw.circle(surface, colour.RED if i == 1 else colour.BLUE, textPos, radius, 1)
+
+            textScore = self.font.render("{}".format(score), False, colour.BLACK)
+            textScoreRect = textScore.get_rect(center=textPos)
+            surface.blit(textScore, textScoreRect)
