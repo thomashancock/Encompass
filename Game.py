@@ -45,7 +45,6 @@ class Game:
         self.startingBeads = 17
         self.scores = ScoreKeeper()
 
-        # Store a pointer to the board
         self.board = board
         self.display = display
 
@@ -66,9 +65,11 @@ class Game:
         logging.info("Resetting game state")
         self.board.reset()
         self.isFinished = False
+
         # Reset removal variables
         self.inRemoval = False
         self.stagedForRemoval = None
+
         # Reset clearance variables
         self.inClearance = False
         self.clearance = 0
@@ -153,66 +154,79 @@ class Game:
             if (self.board.isOnGrid(pos)):
                 coor = self.board.getCoor(pos)
                 logging.info("Click signal received on grid: coordinate ({} {})".format(*coor))
-
-                if (self.clearance == 0):
-                    if (self.inRemoval):
-                        if (coor  == self.stagedForRemoval):
-                            self.board.unsetHighlight()
-                            self.stagedForRemoval = None
-                            self.inRemoval = False
-                        elif (self.board.areP1AndP2(coor, self.stagedForRemoval)):
-                            self.board.setEmpty(coor)
-                            self.board.setEmpty(self.stagedForRemoval)
-
-                            self.board.unsetHighlight()
-                            self.stagedForRemoval = None
-                            self.inRemoval = False
-
-                            self.updateState()
-                    elif (self.board.isSpaceEmpty(coor)):
-                        if (self.isP1Turn() and not self.board.isSpaceSurroundedByP2(coor) and self.getP1NBeads() > 0):
-                            self.board.setP1(coor)
-                            self.updateState()
-                        elif (self.isP2Turn() and not self.board.isSpaceSurroundedByP1(coor) and self.getP2NBeads() > 0):
-                            self.board.setP2(coor)
-                            self.updateState()
-                    else:
-                        self.board.setHighlight(coor)
-                        self.inRemoval = True
-                        self.stagedForRemoval = coor
-                else:
-                    # Process clearance. Can only remove own beads
-                    if ((self.isP1Turn() and self.board.isP1(coor)) or (self.isP2Turn() and self.board.isP2(coor))):
-                        self.board.setEmpty(coor)
-                        self.clearance -= 1
-                        assert(self.clearance > -1)
-                        self.updateState()
+                self.processClickOnBoard(coor)
             else:
                 logging.info("Click signal received: position ({} {})".format(*pos))
-                xMax, yMax = surface.get_size()
-                # Convert coordinates to be relative to centre. Top right is (+, +)
-                xRel, yRel = pos[0] - xMax/float(2), yMax/float(2) - pos[1]
-                # Detect clicks in four zones around the board
-                if (xRel > 0 and abs(xRel) > abs(yRel)):
-                    logging.info("Attempting move Right")
-                    if (self.board.canShiftRight()):
-                        logging.info("Shift right possible")
-                        self.board.shiftRight()
-                if (xRel < 0 and abs(xRel) > abs(yRel)):
-                    logging.info("Attempting move Left")
-                    if (self.board.canShiftLeft()):
-                        logging.info("Shift left possible")
-                        self.board.shiftLeft()
-                if (yRel > 0 and abs(yRel) > abs(xRel)):
-                    logging.info("Attempting move Up")
-                    if (self.board.canShiftUp()):
-                        logging.info("Shift up possible")
-                        self.board.shiftUp()
-                if (yRel < 0 and abs(yRel) > abs(xRel)):
-                    logging.info("Attempting move Down")
-                    if (self.board.canShiftDown()):
-                        logging.info("Shift down possible")
-                        self.board.shiftDown()
+                self.processClickOutsideBoard(pos, surface)
+
+
+    def processClickOnBoard(self, coor):
+        if (self.clearance == 0):
+            if (self.inRemoval):
+                if (coor  == self.stagedForRemoval):
+                    self.board.unsetHighlight()
+                    self.stagedForRemoval = None
+                    self.inRemoval = False
+                elif (self.board.areP1AndP2(coor, self.stagedForRemoval)):
+                    self.board.setEmpty(coor)
+                    self.board.setEmpty(self.stagedForRemoval)
+
+                    self.board.unsetHighlight()
+                    self.stagedForRemoval = None
+                    self.inRemoval = False
+
+                    self.updateState()
+            elif (self.board.isSpaceEmpty(coor)):
+                if (self.isP1Turn() and not self.board.isSpaceSurroundedByP2(coor) and self.getP1NBeads() > 0):
+                    self.board.setP1(coor)
+                    self.updateState()
+                elif (self.isP2Turn() and not self.board.isSpaceSurroundedByP1(coor) and self.getP2NBeads() > 0):
+                    self.board.setP2(coor)
+                    self.updateState()
+            else:
+                self.board.setHighlight(coor)
+                self.inRemoval = True
+                self.stagedForRemoval = coor
+        else:
+            self.runClearance(coor)
+
+
+    def runClearance(self, coor):
+        '''
+        Process clearance. Can only remove own beads
+        '''
+        if ((self.isP1Turn() and self.board.isP1(coor)) or (self.isP2Turn() and self.board.isP2(coor))):
+            self.board.setEmpty(coor)
+            self.clearance -= 1
+            assert(self.clearance > -1)
+            self.updateState()
+
+
+    def processClickOutsideBoard(self, pos, surface):
+        xMax, yMax = surface.get_size()
+        # Convert coordinates to be relative to centre. Top right is (+, +)
+        xRel, yRel = pos[0] - xMax/float(2), yMax/float(2) - pos[1]
+        # Detect clicks in four zones around the board
+        if (xRel > 0 and abs(xRel) > abs(yRel)):
+            logging.info("Attempting move Right")
+            if (self.board.canShiftRight()):
+                logging.info("Shift right possible")
+                self.board.shiftRight()
+        if (xRel < 0 and abs(xRel) > abs(yRel)):
+            logging.info("Attempting move Left")
+            if (self.board.canShiftLeft()):
+                logging.info("Shift left possible")
+                self.board.shiftLeft()
+        if (yRel > 0 and abs(yRel) > abs(xRel)):
+            logging.info("Attempting move Up")
+            if (self.board.canShiftUp()):
+                logging.info("Shift up possible")
+                self.board.shiftUp()
+        if (yRel < 0 and abs(yRel) > abs(xRel)):
+            logging.info("Attempting move Down")
+            if (self.board.canShiftDown()):
+                logging.info("Shift down possible")
+                self.board.shiftDown()
 
 
     def processKey(self, key):
