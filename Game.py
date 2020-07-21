@@ -56,7 +56,7 @@ class Game:
 
         # Used to remove beads when board is full
         self.inClearance = False
-        self.clearance = 0
+        self.clearanceCount = 0
 
         self.processNewState()
 
@@ -72,7 +72,7 @@ class Game:
 
         # Reset clearance variables
         self.inClearance = False
-        self.clearance = 0
+        self.clearanceCount = 0
         self.processNewState()
 
 
@@ -95,14 +95,16 @@ class Game:
 
 
     def setStateClearance(self):
+        logging.info("Entering clearance state")
         assert(not self.inRemoval)
-        self.clearance = 6
+        self.clearanceCount = 6
         self.inClearance = True
 
 
     def unsetStateClearance(self):
+        logging.info("Leaving clearance state")
         assert(self.inClearance)
-        assert(self.clearance == 0)
+        assert(self.clearanceCount == 0)
         self.inClearance = False
 
 
@@ -110,6 +112,7 @@ class Game:
         '''
         Stage a bead for removal and update state
         '''
+        logging.info("Entering removal state")
         assert(not self.inClearance)
         self.board.setHighlight(coor)
         self.stagedForRemoval = coor
@@ -117,6 +120,7 @@ class Game:
 
 
     def unsetStateRemoval(self):
+        logging.info("Leaving removal state")
         assert(self.inRemoval)
         self.board.unsetHighlight()
         self.stagedForRemoval = None
@@ -159,7 +163,7 @@ class Game:
             self.display.setTopText("{} Wins!".format("Red" if self.isP1Turn() else "Blue"))
             self.display.setBottomText("Press Space to replay!")
         elif (self.inClearance):
-            self.display.setBottomText(f"Clearance! Removals remaining: {self.clearance}")
+            self.display.setBottomText(f"Clearance! Removals remaining: {self.clearanceCount}")
         else:
             self.display.eraseBottomText()
 
@@ -168,22 +172,20 @@ class Game:
         '''
         Updates the game state based on the state of the board
         '''
-        logging.info("Updating game state")
+        logging.info("Processing game state")
         if (self.board.isVictory()):
             self.isFinished = True
             if self.isP1Turn():
+                logging.info("Player 1 wins!")
                 self.scores.recordP1Win()
             else:
+                logging.info("Player 2 wins!")
                 self.scores.recordP2Win()
-        elif (self.board.isFull()):
-            logging.info("Board full. Entering clearance mode")
-            self.setStateClearance()
-            self.updateTurn()
-        elif (self.isStateClearance() and self.clearance == 0):
-            logging.info("End of clearance mode")
-            self.unsetStateClearance()
-            self.updateTurn()
         else:
+            if (self.board.isFull()):
+                self.setStateClearance()
+            elif (self.isStateClearance() and self.clearanceCount == 0):
+                self.unsetStateClearance()
             self.updateTurn()
 
         # Update display to represent new state
@@ -205,18 +207,24 @@ class Game:
 
 
     def processClickOnBoard(self, coor):
+        '''
+        Process a mouse click on the board based on the postion and game state.
+        '''
         if (self.isStateClearance()):
             self.runClearance(coor)
         else:
             if (self.isStateRemoval()):
                 if (coor  == self.stagedForRemoval):
+                    # If clicked space is already staged, needs to be unstaged
                     self.unsetStateRemoval()
                 elif (self.board.areP1AndP2(coor, self.stagedForRemoval)):
+                    # If clicked space is controlled by a different player, remove both
                     self.board.setEmpty(coor)
                     self.board.setEmpty(self.stagedForRemoval)
                     self.unsetStateRemoval()
                     self.processNewState()
             elif (self.board.isSpaceEmpty(coor)):
+                # If space is empty, check if move is legal and add a bead if so
                 if (self.isP1Turn() and not self.board.isSpaceSurroundedByP2(coor) and self.getP1NBeads() > 0):
                     self.board.setP1(coor)
                     self.processNewState()
@@ -224,17 +232,19 @@ class Game:
                     self.board.setP2(coor)
                     self.processNewState()
             else:
+                # If space isn't empty and state isn't removal,
+                #   stage clicked bead for removal
                 self.setStateRemoval(coor)
 
 
     def runClearance(self, coor):
         '''
-        Process clearance. Can only remove own beads
+        Process clearance. Can only remove own beads.
         '''
         if ((self.isP1Turn() and self.board.isP1(coor)) or (self.isP2Turn() and self.board.isP2(coor))):
             self.board.setEmpty(coor)
-            self.clearance -= 1
-            assert(self.clearance > -1)
+            self.clearanceCount -= 1
+            assert(self.clearanceCount > -1)
             self.processNewState()
 
 

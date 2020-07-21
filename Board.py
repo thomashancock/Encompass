@@ -357,7 +357,6 @@ class Board:
 
 
     def isVictory(self):
-        logging.info("Checking for victory")
         for x, y in itertools.product(range(1, self.size-1), range(1, self.size-1)):
             coor = (x,y)
             if self.isSpaceSurrounded(coor):
