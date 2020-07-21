@@ -264,29 +264,29 @@ class Game:
 
 
     def processClickOutsideBoard(self, pos, surface):
+        '''
+        Process a mouse click outside the game board.
+        Used to input shifts of the board pieces.
+        '''
         xMax, yMax = surface.get_size()
         # Convert coordinates to be relative to centre. Top right is (+, +)
         xRel, yRel = pos[0] - xMax/float(2), yMax/float(2) - pos[1]
         # Detect clicks in four zones around the board
         if (xRel > 0 and abs(xRel) > abs(yRel)):
-            logging.info("Attempting move Right")
             if (self.board.canShiftRight()):
-                logging.info("Shift right possible")
+                logging.info("Performing shift right")
                 self.board.shiftRight()
         if (xRel < 0 and abs(xRel) > abs(yRel)):
-            logging.info("Attempting move Left")
             if (self.board.canShiftLeft()):
-                logging.info("Shift left possible")
+                logging.info("Performing shift left")
                 self.board.shiftLeft()
         if (yRel > 0 and abs(yRel) > abs(xRel)):
-            logging.info("Attempting move Up")
             if (self.board.canShiftUp()):
-                logging.info("Shift up possible")
+                logging.info("Performing shift up")
                 self.board.shiftUp()
         if (yRel < 0 and abs(yRel) > abs(xRel)):
-            logging.info("Attempting move Down")
             if (self.board.canShiftDown()):
-                logging.info("Shift down possible")
+                logging.info("Performing shift down")
                 self.board.shiftDown()
 
 
