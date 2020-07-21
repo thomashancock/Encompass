@@ -10,6 +10,9 @@ import Colours as colour
 
 
 class Grid:
+    '''
+    Draws the grid and handles grid collisions and coordinate transformations
+    '''
     def __init__(self, nSpaces, origin, dimensions):
         self.nSpaces = nSpaces
         self.origin = origin
@@ -96,6 +99,9 @@ class Grid:
 
 
 class Board:
+    '''
+    Manages and draws the game board and pieces
+    '''
     def __init__(self, surface):
         self.size = 5
 
@@ -126,7 +132,7 @@ class Board:
 
 
     def draw(self, surface):
-        # Draw 5x5 grid
+        # Draw grid
         self.grid.draw(surface)
 
         # Draw beads

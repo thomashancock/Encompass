@@ -48,7 +48,7 @@ class Game:
         self.board = board
         self.display = display
 
-        self.p1Turn = False # Will be set to true by updateState call
+        self.p1Turn = False # Will be set to true by processNewState call
         self.isFinished = False
 
         self.inRemoval = False
@@ -58,7 +58,7 @@ class Game:
         self.inClearance = False
         self.clearance = 0
 
-        self.updateState()
+        self.processNewState()
 
 
     def reset(self):
@@ -73,8 +73,10 @@ class Game:
         # Reset clearance variables
         self.inClearance = False
         self.clearance = 0
-        self.updateState()
+        self.processNewState()
 
+
+    ### State management functions
 
     def isP1Turn(self):
         return self.p1Turn
@@ -91,6 +93,49 @@ class Game:
     def getP2NBeads(self):
         return self.startingBeads - self.board.countP2Beads()
 
+
+    def setStateClearance(self):
+        assert(not self.inRemoval)
+        self.clearance = 6
+        self.inClearance = True
+
+
+    def unsetStateClearance(self):
+        assert(self.inClearance)
+        assert(self.clearance == 0)
+        self.inClearance = False
+
+
+    def setStateRemoval(self, coor):
+        '''
+        Stage a bead for removal and update state
+        '''
+        assert(not self.inClearance)
+        self.board.setHighlight(coor)
+        self.stagedForRemoval = coor
+        self.inRemoval = True
+
+
+    def unsetStateRemoval(self):
+        assert(self.inRemoval)
+        self.board.unsetHighlight()
+        self.stagedForRemoval = None
+        self.inRemoval = False
+
+
+    def isStateRegular(self):
+        return not (self.inClearance or self.inRemoval)
+
+
+    def isStateClearance(self):
+        return self.inClearance
+
+
+    def isStateRemoval(self):
+        return self.inRemoval
+
+
+    ### State update functions
 
     def updateTurn(self):
         '''
@@ -119,7 +164,7 @@ class Game:
             self.display.eraseBottomText()
 
 
-    def updateState(self):
+    def processNewState(self):
         '''
         Updates the game state based on the state of the board
         '''
@@ -132,12 +177,11 @@ class Game:
                 self.scores.recordP2Win()
         elif (self.board.isFull()):
             logging.info("Board full. Entering clearance mode")
-            self.clearance = 6
-            self.inClearance = True
+            self.setStateClearance()
             self.updateTurn()
-        elif (self.inClearance and self.clearance == 0):
+        elif (self.isStateClearance() and self.clearance == 0):
             logging.info("End of clearance mode")
-            self.inClearance = False
+            self.unsetStateClearance()
             self.updateTurn()
         else:
             self.updateTurn()
@@ -161,34 +205,26 @@ class Game:
 
 
     def processClickOnBoard(self, coor):
-        if (self.clearance == 0):
-            if (self.inRemoval):
+        if (self.isStateClearance()):
+            self.runClearance(coor)
+        else:
+            if (self.isStateRemoval()):
                 if (coor  == self.stagedForRemoval):
-                    self.board.unsetHighlight()
-                    self.stagedForRemoval = None
-                    self.inRemoval = False
+                    self.unsetStateRemoval()
                 elif (self.board.areP1AndP2(coor, self.stagedForRemoval)):
                     self.board.setEmpty(coor)
                     self.board.setEmpty(self.stagedForRemoval)
-
-                    self.board.unsetHighlight()
-                    self.stagedForRemoval = None
-                    self.inRemoval = False
-
-                    self.updateState()
+                    self.unsetStateRemoval()
+                    self.processNewState()
             elif (self.board.isSpaceEmpty(coor)):
                 if (self.isP1Turn() and not self.board.isSpaceSurroundedByP2(coor) and self.getP1NBeads() > 0):
                     self.board.setP1(coor)
-                    self.updateState()
+                    self.processNewState()
                 elif (self.isP2Turn() and not self.board.isSpaceSurroundedByP1(coor) and self.getP2NBeads() > 0):
                     self.board.setP2(coor)
-                    self.updateState()
+                    self.processNewState()
             else:
-                self.board.setHighlight(coor)
-                self.inRemoval = True
-                self.stagedForRemoval = coor
-        else:
-            self.runClearance(coor)
+                self.setStateRemoval(coor)
 
 
     def runClearance(self, coor):
@@ -199,7 +235,7 @@ class Game:
             self.board.setEmpty(coor)
             self.clearance -= 1
             assert(self.clearance > -1)
-            self.updateState()
+            self.processNewState()
 
 
     def processClickOutsideBoard(self, pos, surface):
