@@ -12,27 +12,11 @@ logger = logging.getLogger(__file__)
 import LoggerSettings
 
 # Local Imports
+from Input import Input
 from Actions import *
 from Board import Board
 from DisplayInfo import DisplayInfo
 import Colours as colour
-
-
-class Input:
-    def __init__(self):
-        pass
-
-
-    def parseInputs(self, actionQueue):
-        for event in pygame.event.get():
-            # Detect Quit Action
-            if event.type == pygame.locals.QUIT:
-                pygame.quit()
-                sys.exit()
-
-            elif event.type == pygame.MOUSEBUTTONUP:
-                pos = pygame.mouse.get_pos()
-                actionQueue.append(ActionMouseClick(pos))
 
 
 class Game:
@@ -57,6 +41,10 @@ class Game:
         self.clearance = 0
 
         self.updateState()
+
+
+    def reset(self):
+        logging.info("Resetting game state")
 
 
     def isP1Turn(self):
@@ -157,6 +145,11 @@ class Game:
             logging.info("Click signal received: position ({} {})".format(*pos))
 
 
+    def processKey(self, key):
+        if (key == pygame.K_SPACE and self.isFinished):
+            self.reset()
+
+
 class World:
     '''
     World class
@@ -175,8 +168,13 @@ class World:
 
 
     def _processAction(self, action):
-        if action.getActionType() == "MOUSEBUTTONUP":
+        if action.getActionType() == "QUIT":
+            pygame.quit()
+            sys.exit()
+        elif action.getActionType() == "MOUSEBUTTONUP":
             self.game.processClick(action.getPos())
+        elif action.getActionType() == "KEYUP":
+            self.game.processKey(action.getKey())
 
 
     def run(self):

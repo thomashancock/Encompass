@@ -21,3 +21,16 @@ class ActionMouseClick(Action):
 
     def getPos(self):
         return self.pos
+
+
+class ActionKeyPressed(Action):
+    '''
+    Action for mouse clicks
+    '''
+    def __init__(self, key):
+        Action.__init__(self, "KEYUP")
+        self.key = key
+
+
+    def getKey(self):
+        return self.key
