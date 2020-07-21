@@ -243,9 +243,10 @@ class Game:
                 # If space is empty, check if move is legal and add a bead if so
                 if (self.isP1Turn() and not self.board.isSpaceSurroundedByP2(coor) and self.getP1NBeads() > 0):
                     self.board.setP1(coor)
+                    self.processNewState()
                 elif (self.isP2Turn() and not self.board.isSpaceSurroundedByP1(coor) and self.getP2NBeads() > 0):
                     self.board.setP2(coor)
-                self.processNewState()
+                    self.processNewState()
             elif (isOnBead):
                 # If space isn't empty and state isn't removal,
                 #   stage clicked bead for removal
