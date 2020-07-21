@@ -79,11 +79,24 @@ class Game:
         self.p1Turn = not self.p1Turn
 
 
+    def updateDisplay(self):
+        # Update display
+        self.display.setTopText("Active Player: {}".format("Red" if self.isP1Turn() else "Blue"))
+        self.display.setP1BeadsRemaining(self.getP1NBeads())
+        self.display.setP2BeadsRemaining(self.getP2NBeads())
+        if (self.isFinished):
+            self.display.setTopText("{} Wins!".format("Red" if self.isP1Turn() else "Blue"))
+            self.display.setBottomText("Game ended.")
+        elif (self.inClearance):
+            self.display.setBottomText("In clearance. Beads can only be removed.")
+        else:
+            self.display.eraseBottomText()
+
+
     def updateState(self):
         logging.info("Updating game state")
         if (self.board.isVictory()):
             self.isFinished = True
-            self.display.setTopText("{} Wins!".format("Red" if self.isP1Turn() else "Blue"))
         elif (self.board.isFull()):
             logging.info("Board full. Entering clearance mode")
             self.clearance = 6
@@ -96,16 +109,8 @@ class Game:
         else:
             self.updateTurn()
 
-        # Update display
-        self.display.setTopText("Active Player: {}".format("Red" if self.isP1Turn() else "Blue"))
-        self.display.setP1BeadsRemaining(self.getP1NBeads())
-        self.display.setP2BeadsRemaining(self.getP2NBeads())
-        if (self.isFinished):
-            self.display.setBottomText("Game ended.")
-        elif (self.inClearance):
-            self.display.setBottomText("In clearance. Beads can only be removed.")
-        else:
-            self.display.eraseBottomText()
+        self.updateDisplay()
+
 
     def processClick(self, pos):
         if (self.board.isOnGrid(pos) and not self.isFinished):
