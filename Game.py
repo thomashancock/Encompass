@@ -210,24 +210,26 @@ class Game:
         Processes user input from the mouse
         '''
         if (not self.isFinished):
+            logging.info("Click signal received: position ({} {})".format(*pos))
             if (self.board.isOnGrid(pos)):
-                coor = self.board.getCoor(pos)
-                logging.info("Click signal received on grid: coordinate ({} {})".format(*coor))
-                self.processClickOnBoard(coor)
+                self.processClickOnBoard(pos)
             else:
-                logging.info("Click signal received: position ({} {})".format(*pos))
                 self.processClickOutsideBoard(pos, surface)
 
 
-    def processClickOnBoard(self, coor):
+    def processClickOnBoard(self, pos):
         '''
         Process a mouse click on the board based on the postion and game state.
         '''
-        if (self.isStateClearance()):
+        coor = self.board.getCoor(pos)
+        logging.info("Corresponding coordinate ({} {})".format(*coor))
+        isOnBead = self.board.isOnBead(coor, pos)
+
+        if (self.isStateClearance() and isOnBead):
             self.runClearance(coor)
             self.processNewState()
         else:
-            if (self.isStateRemoval()):
+            if (self.isStateRemoval() and isOnBead):
                 if (coor  == self.stagedForRemoval):
                     # If clicked space is already staged, needs to be unstaged
                     self.unsetStateRemoval()
@@ -244,7 +246,7 @@ class Game:
                 elif (self.isP2Turn() and not self.board.isSpaceSurroundedByP1(coor) and self.getP2NBeads() > 0):
                     self.board.setP2(coor)
                 self.processNewState()
-            else:
+            elif (isOnBead):
                 # If space isn't empty and state isn't removal,
                 #   stage clicked bead for removal
                 self.setStateRemoval(coor)
