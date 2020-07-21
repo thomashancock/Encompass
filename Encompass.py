@@ -23,7 +23,7 @@ import Colours as colour
 class World:
     '''
     World class
-    Manages and runs the simulation
+    Manages and runs the game
     '''
     def __init__(self, width, height):
         self.surface = pygame.display.set_mode((width, height))
